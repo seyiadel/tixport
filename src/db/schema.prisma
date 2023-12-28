@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum Role {
+  BASIC @map("BASIC")
+  ORGANIZER @map("ORGANIZER")
+  ADMIN @map("ADMIN")
+}
+
+model User {
+  id           String           @id @default(uuid()) @db.Uuid
+  firstName    String        @db.VarChar(27)
+  lastName     String        @db.VarChar(27)
+  email        String        @unique
+  role         Role          @default(BASIC)
+  password     String
+  organization  Organization?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+
+model Organization {
+  id    String    @id   @default(uuid()) @db.Uuid
+  name  String    @unique @db.VarChar(50)
+  bio   String    @db.VarChar(200)
+  user  User      @relation(fields: [userId], references: [id])
+  userId String   @unique @db.Uuid
+  events   Event[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+enum EventType {
+  FREE  @map("FREE")
+  PAID  @map("PAID")
+}
+
+model Event {
+  id    String    @id   @default(uuid())  @db.Uuid
+  name    String
+  bio     String    @db.VarChar(240)
+  type    EventType @default(PAID)
+  street    String
+  city    String
+  state   String
+  country   String
+  startDate   DateTime    @db.Date
+  startTime   DateTime    @db.Time()
+  endDate   DateTime    @db.Date
+  endTime   DateTime    @db.Time()
+  organization    Organization  @relation(fields: [organizationId], references: [id])
+  organizationId    String @db.Uuid
+  tickets   Ticket[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+}
+
+model Ticket {
+  id    String    @id   @default(uuid()) @db.Uuid
+  status    String    @default("Regular")
+  price   Float  
+  availableTickets  Int
+  eventId   String  @db.Uuid
+  event   Event @relation(fields: [eventId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
